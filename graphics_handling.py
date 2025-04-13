@@ -9,6 +9,8 @@ from kivy.graphics import Color, Rectangle
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
+from kivy.core.window import Window
+from kivy.graphics import Line
 import database_handling as dbh
 
 symbols = ['','','','']
@@ -105,11 +107,22 @@ class ApplicationLayout(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'horizontal'
-        left_side = Widget()
-        with left_side.canvas.before:
+        self.left_side = Widget()
+        with self.left_side.canvas.before:
             Color(1,1,1,1)
-            self.rect_l = Rectangle(size=left_side.size,pos=left_side.pos)
-        left_side.bind(size=self.update_rect_l,pos=self.update_rect_l)
+            self.rect_l = Rectangle(size=self.left_side.size,pos=self.left_side.pos)
+        self.left_side.bind(size=self.update_rect_l,pos=self.update_rect_l)
+        '''
+        print(left_side.width,left_side.height) #why 100x100, its wrong
+        with left_side.canvas:
+            Color(1,0,0,1)
+            Line(bezier=[
+                100, 100,  # P0 - start
+                150, 300,  # P1 - control
+                300, 300,  # P2 - control
+                400, 100   # P3 - end
+            ], width=5)
+            '''
         right_side = FloatLayout(size_hint=(0.3, 1))
         with right_side.canvas.before:
             Color(3/255,37/255,76/255,1)
@@ -120,13 +133,14 @@ class ApplicationLayout(BoxLayout):
         button3 = Button(text='Wczytaj',size_hint=(0.72,0.1),pos_hint={'center_x':0.5,'center_y':0.42},background_normal='',background_color=(24/255,123/255,205/255,1),font_size='35')
         button4 = Button(text='Zapisz',size_hint=(0.72,0.1),pos_hint={'center_x':0.5,'center_y':0.25},background_normal='',background_color=(24/255,123/255,205/255,1),font_size='35')
         button1.bind(on_release=self.show_symbols_window)
+        button2.bind(on_release=self.make_swap_operation)
         button3.bind(on_release=self.show_load_window)
         button4.bind(on_release=self.save_uniterms)
         right_side.add_widget(button1)
         right_side.add_widget(button2)
         right_side.add_widget(button3)
         right_side.add_widget(button4)
-        self.add_widget(left_side)
+        self.add_widget(self.left_side)
         self.add_widget(right_side)
     def update_rect_l(self, instance,value):
         self.rect_l.pos = instance.pos
@@ -147,6 +161,36 @@ class ApplicationLayout(BoxLayout):
         if not saved:
             dbh.save_entry(symbols,position)
             saved = True
+    def make_swap_operation(self,instance):
+        canvas_width = self.left_side.width
+        canvas_height = self.left_side.height
+        self.left_side.canvas.clear()
+        with self.left_side.canvas:
+            Color(0,0,0,1)
+            Line(bezier=[
+                canvas_width*0.196,canvas_height*0.967,
+                canvas_width*0.016,canvas_height*0.822,
+                canvas_width*0.016,canvas_height*0.678,
+                canvas_width*0.196,canvas_height*0.533
+            ],width=5)
+            Line(bezier=[
+                canvas_width*0.522,canvas_height*0.683,
+                canvas_width*0.674,canvas_height*0.867,
+                canvas_width*0.826,canvas_height*0.867,
+                canvas_width*0.978,canvas_height*0.683
+            ],width=5)
+            Line(bezier=[
+                canvas_width*0.272,canvas_height*0.328,
+                canvas_width*0.435,canvas_height*0.511,
+                canvas_width*0.598,canvas_height*0.511,
+                canvas_width*0.761,canvas_height*0.328
+            ],width=5)
+            Line(bezier=[
+                canvas_width*0.397,canvas_height*0.417,
+                canvas_width*0.283,canvas_height*0.317,
+                canvas_width*0.283,canvas_height*0.217,
+                canvas_width*0.397,canvas_height*0.117
+            ],width=5)
 
 class UnitermGUI(App):
     def build(self):

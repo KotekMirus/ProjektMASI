@@ -18,6 +18,7 @@ def save_entry(symbols,position):
         json.dump(database,file,indent = 3)
 
 def load_all_entries():
+    check_database_existence()
     database = None
     with open('database.json','r') as file:
         database = json.load(file)
