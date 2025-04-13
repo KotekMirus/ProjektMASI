@@ -4,6 +4,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
+from kivy.core.text import Label as CoreLabel
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
 from kivy.uix.scrollview import ScrollView
@@ -18,8 +19,9 @@ position = 0
 saved = True
 
 class SymbolsWindow(Popup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self,parent_ref,**kwargs):
+        super(SymbolsWindow,self).__init__(**kwargs)
+        self.parent_ref = parent_ref
         self.title = 'Wprowadzanie unitermów'
         self.size_hint = (0.8,0.8)
         self.separator_color=(24/255,123/255,205/255,1)
@@ -60,6 +62,7 @@ class SymbolsWindow(Popup):
             symbols[2] = self.symbol3.text
             symbols[3] = self.symbol4.text
             saved = False
+            self.parent_ref.draw_operations()
             self.dismiss()
     def exit(self,instance):
         self.dismiss()
@@ -112,17 +115,6 @@ class ApplicationLayout(BoxLayout):
             Color(1,1,1,1)
             self.rect_l = Rectangle(size=self.left_side.size,pos=self.left_side.pos)
         self.left_side.bind(size=self.update_rect_l,pos=self.update_rect_l)
-        '''
-        print(left_side.width,left_side.height) #why 100x100, its wrong
-        with left_side.canvas:
-            Color(1,0,0,1)
-            Line(bezier=[
-                100, 100,  # P0 - start
-                150, 300,  # P1 - control
-                300, 300,  # P2 - control
-                400, 100   # P3 - end
-            ], width=5)
-            '''
         right_side = FloatLayout(size_hint=(0.3, 1))
         with right_side.canvas.before:
             Color(3/255,37/255,76/255,1)
@@ -148,8 +140,8 @@ class ApplicationLayout(BoxLayout):
     def update_rect_r(self,instance,value):
         self.rect_r.pos = instance.pos
         self.rect_r.size = instance.size
-    def show_symbols_window(self,instance):
-        popup = SymbolsWindow()
+    def show_symbols_window(self,*args):
+        popup = SymbolsWindow(parent_ref=self)
         popup.open()
     def show_load_window(self,instance):
         popup = LoadWindow()
@@ -162,8 +154,40 @@ class ApplicationLayout(BoxLayout):
             dbh.save_entry(symbols,position)
             saved = True
     def make_swap_operation(self,instance):
+        if symbols[0] != '' and symbols[1] != '' and symbols[2] != '' and symbols[3] != '':
+            self.draw_operations(True)
+    def draw_operations(self,with_swap=False):
+        global symbols
+        global position
         canvas_width = self.left_side.width
         canvas_height = self.left_side.height
+        size_sample = canvas_height+canvas_width
+        curve_width = 2
+        if size_sample >= 2200:
+            curve_width = 6
+        elif size_sample >= 1800:
+            curve_width = 5
+        elif size_sample >= 1400:
+            curve_width = 4
+        elif size_sample >= 1000:
+            curve_width = 3
+        else:
+            curve_width = 2
+        symbol1 = CoreLabel(text=symbols[0],font_size=int(canvas_height*0.06444))
+        symbol1.refresh()
+        symbol1_texture = symbol1.texture
+        symbol2 = CoreLabel(text=symbols[1],font_size=int(canvas_height*0.06444))
+        symbol2.refresh()
+        symbol2_texture = symbol2.texture
+        symbol3 = CoreLabel(text=symbols[2],font_size=int(canvas_height*0.06444))
+        symbol3.refresh()
+        symbol3_texture = symbol3.texture
+        symbol4 = CoreLabel(text=symbols[3],font_size=int(canvas_height*0.06444))
+        symbol4.refresh()
+        symbol4_texture = symbol4.texture
+        separator = CoreLabel(text=";",font_size=int(canvas_height*0.06444))
+        separator.refresh()
+        separator_texture = separator.texture
         self.left_side.canvas.clear()
         with self.left_side.canvas:
             Color(0,0,0,1)
@@ -172,25 +196,53 @@ class ApplicationLayout(BoxLayout):
                 canvas_width*0.016,canvas_height*0.822,
                 canvas_width*0.016,canvas_height*0.678,
                 canvas_width*0.196,canvas_height*0.533
-            ],width=5)
+            ],width=curve_width)
             Line(bezier=[
                 canvas_width*0.522,canvas_height*0.683,
                 canvas_width*0.674,canvas_height*0.867,
                 canvas_width*0.826,canvas_height*0.867,
                 canvas_width*0.978,canvas_height*0.683
-            ],width=5)
-            Line(bezier=[
-                canvas_width*0.272,canvas_height*0.328,
-                canvas_width*0.435,canvas_height*0.511,
-                canvas_width*0.598,canvas_height*0.511,
-                canvas_width*0.761,canvas_height*0.328
-            ],width=5)
-            Line(bezier=[
-                canvas_width*0.397,canvas_height*0.417,
-                canvas_width*0.283,canvas_height*0.317,
-                canvas_width*0.283,canvas_height*0.217,
-                canvas_width*0.397,canvas_height*0.117
-            ],width=5)
+            ],width=curve_width)
+            Rectangle(texture=symbol1_texture,pos=(canvas_width*0.114,canvas_height*0.811),size=symbol1_texture.size)
+            Rectangle(texture=separator_texture,pos=(canvas_width*0.114,canvas_height*0.720),size=separator_texture.size)
+            Rectangle(texture=symbol2_texture,pos=(canvas_width*0.114,canvas_height*0.617),size=symbol2_texture.size)
+            Rectangle(texture=symbol3_texture,pos=(canvas_width*0.598,canvas_height*0.678),size=symbol3_texture.size)
+            Rectangle(texture=separator_texture,pos=(canvas_width*0.745,canvas_height*0.686),size=separator_texture.size)
+            Rectangle(texture=symbol4_texture,pos=(canvas_width*0.786,canvas_height*0.678),size=symbol4_texture.size)
+            if with_swap:
+                if position == 0 or position == 2:
+                    position = 1
+                elif position == 1:
+                    position = 2
+                Line(bezier=[
+                    canvas_width*0.272,canvas_height*0.328,
+                    canvas_width*0.435,canvas_height*0.511,
+                    canvas_width*0.598,canvas_height*0.511,
+                    canvas_width*0.761,canvas_height*0.328
+                ],width=curve_width)
+                if position == 1:
+                    Line(bezier=[
+                        canvas_width*0.397,canvas_height*0.417,
+                        canvas_width*0.283,canvas_height*0.317,
+                        canvas_width*0.283,canvas_height*0.217,
+                        canvas_width*0.397,canvas_height*0.117
+                    ],width=curve_width)
+                    Rectangle(texture=symbol1_texture,pos=(canvas_width*0.358,canvas_height*0.308),size=symbol1_texture.size)
+                    Rectangle(texture=symbol2_texture,pos=(canvas_width*0.358,canvas_height*0.165),size=symbol2_texture.size)
+                    Rectangle(texture=separator_texture,pos=(canvas_width*0.358,canvas_height*0.241),size=separator_texture.size)
+                    Rectangle(texture=symbol4_texture,pos=(canvas_width*0.552,canvas_height*0.329),size=symbol4_texture.size)
+                elif position == 2:
+                    Line(bezier=[
+                        canvas_width*0.637,canvas_height*0.417,
+                        canvas_width*0.523,canvas_height*0.317,
+                        canvas_width*0.523,canvas_height*0.217,
+                        canvas_width*0.637,canvas_height*0.117
+                    ],width=curve_width)
+                    Rectangle(texture=symbol1_texture,pos=(canvas_width*0.598,canvas_height*0.308),size=symbol1_texture.size)
+                    Rectangle(texture=symbol2_texture,pos=(canvas_width*0.598,canvas_height*0.165),size=symbol2_texture.size)
+                    Rectangle(texture=separator_texture,pos=(canvas_width*0.598,canvas_height*0.241),size=separator_texture.size)
+                    Rectangle(texture=symbol3_texture,pos=(canvas_width*0.349,canvas_height*0.329),size=symbol3_texture.size)
+                Rectangle(texture=separator_texture,pos=(canvas_width*0.511,canvas_height*0.342),size=separator_texture.size)
 
 class UnitermGUI(App):
     def build(self):
