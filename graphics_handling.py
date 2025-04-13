@@ -6,6 +6,8 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.label import Label
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
 import database_handling as dbh
 
@@ -60,6 +62,45 @@ class SymbolsWindow(Popup):
     def exit(self,instance):
         self.dismiss()
 
+class LoadWindow(Popup):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.title = 'Wczytywanie danych operacji'
+        self.size_hint = (0.8,0.8)
+        self.separator_color=(24/255,123/255,205/255,1)
+        self.background_color=(0,0,0,1)
+        layout = BoxLayout()
+        layout.orientation = 'vertical'
+        with layout.canvas.before:
+            Color(3/255,37/255,76/255,1)
+            self.rect = Rectangle(size=layout.size,pos=layout.pos)
+        layout.bind(size=self.update_rect,pos=self.update_rect)
+        database = dbh.load_all_entries()
+        scroll = ScrollView()
+        entries_list = GridLayout(cols=1,spacing=14,size_hint_y=None,padding=(130,20,130,20))
+        entries_list.bind(minimum_height=entries_list.setter('height'))
+        for date in database.keys():
+            text = date[:19]+'\n'+(database[date]['symbol1']+' ; '+database[date]['symbol2']+' ; '+database[date]['symbol3']+' ; '+database[date]['symbol4'])[:39]
+            button = Button(text=text,height=86,size_hint_y=None,background_normal='',background_color=(24/255,123/255,205/255,1),font_size='35')
+            button.bind(on_release=lambda instance,d=date: self.load_uniterms(d))
+            entries_list.add_widget(button)
+        scroll.add_widget(entries_list)
+        layout.add_widget(scroll)
+        self.content = layout
+    def update_rect(self,instance,value):
+        self.rect.pos = instance.pos
+        self.rect.size = instance.size
+    def load_uniterms(self,date):
+        global symbols
+        global position
+        database = dbh.load_all_entries()
+        symbols[0] = database[date]['symbol1']
+        symbols[1] = database[date]['symbol2']
+        symbols[2] = database[date]['symbol3']
+        symbols[3] = database[date]['symbol4']
+        position = database[date]['position']
+        self.dismiss()
+
 class ApplicationLayout(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -79,6 +120,7 @@ class ApplicationLayout(BoxLayout):
         button3 = Button(text='Wczytaj',size_hint=(0.72,0.1),pos_hint={'center_x':0.5,'center_y':0.42},background_normal='',background_color=(24/255,123/255,205/255,1),font_size='35')
         button4 = Button(text='Zapisz',size_hint=(0.72,0.1),pos_hint={'center_x':0.5,'center_y':0.25},background_normal='',background_color=(24/255,123/255,205/255,1),font_size='35')
         button1.bind(on_release=self.show_symbols_window)
+        button3.bind(on_release=self.show_load_window)
         button4.bind(on_release=self.save_uniterms)
         right_side.add_widget(button1)
         right_side.add_widget(button2)
@@ -94,6 +136,9 @@ class ApplicationLayout(BoxLayout):
         self.rect_r.size = instance.size
     def show_symbols_window(self,instance):
         popup = SymbolsWindow()
+        popup.open()
+    def show_load_window(self,instance):
+        popup = LoadWindow()
         popup.open()
     def save_uniterms(self,instance):
         global saved

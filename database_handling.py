@@ -16,3 +16,9 @@ def save_entry(symbols,position):
     database[key] = {'symbol1':symbols[0],'symbol2':symbols[1],'symbol3':symbols[2],'symbol4':symbols[3],'position':position}
     with open('database.json','w') as file:
         json.dump(database,file,indent = 3)
+
+def load_all_entries():
+    database = None
+    with open('database.json','r') as file:
+        database = json.load(file)
+    return database
