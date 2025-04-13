@@ -31,8 +31,8 @@ class SymbolsWindow(Popup):
             Color(3/255,37/255,76/255,1)
             self.rect = Rectangle(size=layout.size,pos=layout.pos)
         layout.bind(size=self.update_rect,pos=self.update_rect)
-        text1 = Label(text='Dla poziomej operacji sekwencjonowania',pos_hint={'center_x':0.5,'center_y':0.85},font_size='39')
-        text2 = Label(text='Dla pionowej operacji sekwencjonowania',pos_hint={'center_x':0.5,'center_y':0.54},font_size='39')
+        text1 = Label(text='Dla pionowej operacji sekwencjonowania',pos_hint={'center_x':0.5,'center_y':0.85},font_size='39')
+        text2 = Label(text='Dla poziomej operacji sekwencjonowania',pos_hint={'center_x':0.5,'center_y':0.54},font_size='39')
         self.symbol1 = TextInput(multiline=False,size_hint=(0.28,0.1),pos_hint={'center_x':0.3,'center_y':0.72},font_size='40')
         self.symbol2 = TextInput(multiline=False,size_hint=(0.28,0.1),pos_hint={'center_x':0.7,'center_y':0.72},font_size='40')
         self.symbol3 = TextInput(multiline=False,size_hint=(0.28,0.1),pos_hint={'center_x':0.3,'center_y':0.41},font_size='40')
@@ -68,8 +68,9 @@ class SymbolsWindow(Popup):
         self.dismiss()
 
 class LoadWindow(Popup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self,parent_ref,**kwargs):
+        super(LoadWindow,self).__init__(**kwargs)
+        self.parent_ref = parent_ref
         self.title = 'Wczytywanie danych operacji'
         self.size_hint = (0.8,0.8)
         self.separator_color=(24/255,123/255,205/255,1)
@@ -104,6 +105,14 @@ class LoadWindow(Popup):
         symbols[2] = database[date]['symbol3']
         symbols[3] = database[date]['symbol4']
         position = database[date]['position']
+        if position == 0:
+            self.parent_ref.draw_operations()
+        elif position == 1:
+            position = 2
+            self.parent_ref.draw_operations(True)
+        elif position == 2:
+            position = 1
+            self.parent_ref.draw_operations(True)
         self.dismiss()
 
 class ApplicationLayout(BoxLayout):
@@ -143,8 +152,8 @@ class ApplicationLayout(BoxLayout):
     def show_symbols_window(self,*args):
         popup = SymbolsWindow(parent_ref=self)
         popup.open()
-    def show_load_window(self,instance):
-        popup = LoadWindow()
+    def show_load_window(self,*args):
+        popup = LoadWindow(parent_ref=self)
         popup.open()
     def save_uniterms(self,instance):
         global saved
