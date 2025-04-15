@@ -56,11 +56,13 @@ class SymbolsWindow(Popup):
     def save_symbols_and_exit(self,instance):
         global saved
         global symbols
+        global position
         if self.symbol1.text != '' and self.symbol2.text != '' and self.symbol3.text != '' and self.symbol4.text != '':
             symbols[0] = self.symbol1.text
             symbols[1] = self.symbol2.text
             symbols[2] = self.symbol3.text
             symbols[3] = self.symbol4.text
+            position = 0
             saved = False
             self.parent_ref.draw_operations()
             self.dismiss()
